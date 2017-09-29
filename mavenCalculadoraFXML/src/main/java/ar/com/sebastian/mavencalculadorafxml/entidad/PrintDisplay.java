@@ -12,5 +12,5 @@ import javafx.scene.control.Label;
  * @author sscardig
  */
 public interface PrintDisplay {
-    void printDisplay(String display);
+    void printDisplay();
 }
