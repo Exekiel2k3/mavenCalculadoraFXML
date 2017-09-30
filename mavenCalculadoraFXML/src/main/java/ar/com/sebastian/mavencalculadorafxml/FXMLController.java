@@ -7,35 +7,21 @@ import ar.com.sebastian.mathgametdd.modelo.MathLexer;
 import ar.com.sebastian.mathgametdd.modelo.MathParser;
 import ar.com.sebastian.mathgametdd.modelo.Precedence;
 import ar.com.sebastian.mathgametdd.modelo.Resolver;
-import ar.com.sebastian.mavencalculadorafxml.entidad.Key;
 import ar.com.sebastian.mavencalculadorafxml.entidad.PrintDisplay;
 import ar.com.sebastian.mavencalculadorafxml.modelo.Display;
-import ar.com.sebastian.mavencalculadorafxml.modelo.KeyAC;
-import ar.com.sebastian.mavencalculadorafxml.modelo.KeyAdd;
-import ar.com.sebastian.mavencalculadorafxml.modelo.KeyComma;
-import ar.com.sebastian.mavencalculadorafxml.modelo.KeyDivide;
-import ar.com.sebastian.mavencalculadorafxml.modelo.KeyMultiply;
-import ar.com.sebastian.mavencalculadorafxml.modelo.KeySubstract;
 
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.input.InputEvent;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javax.swing.event.DocumentEvent;
 
 public class FXMLController implements Initializable, PrintDisplay {
     
@@ -82,28 +68,16 @@ public class FXMLController implements Initializable, PrintDisplay {
     @FXML
     private Button buttonNine;
     
-    private Key keyAC;
-    private Key keyComma;
-    private Key keyAdd;
-    private Key keySubstract;
-    private Key keyMultiply;
-    private Key keyDivide;
-   
     private Display display;
     
     private boolean canBeUpdated() {
-        return !keyAdd.isActive() && !keySubstract.isActive() && !keyDivide.isActive() && !keyMultiply.isActive() && !display.isEmpty();
+        return !buttonAdd.isDisabled() && !buttonSubstract.isDisable() &&
+               !buttonDivide.isDisable() && !buttonMultiply.isDisable() && !display.isEmpty();
     }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
-        keyAC = new KeyAC();
-        keyComma = new KeyComma();
-        keyAdd = new KeyAdd();
-        keySubstract = new KeySubstract();
-        keyMultiply = new KeyMultiply();
-        keyDivide = new KeyDivide();
         display = new Display();
         
         pane.setOnKeyReleased(eventHandlerReleased);
@@ -133,12 +107,9 @@ public class FXMLController implements Initializable, PrintDisplay {
      
         @Override
         public void handle(ActionEvent event) {
-            
             display.clearDisplay();
             printDisplay();
-            
-            keyComma.setActive(false);
-            keyAC.setActive(true);
+            buttonComma.setDisable(false);
         }
     };
 
@@ -149,8 +120,7 @@ public class FXMLController implements Initializable, PrintDisplay {
             
             if(!display.isEmpty() & display.getValue()!="0"){
                 processExpression(display.getValue());
-                
-                keyComma.setActive(true);
+                buttonComma.setDisable(true);
             }
         }
     };
@@ -160,15 +130,15 @@ public class FXMLController implements Initializable, PrintDisplay {
         @Override
         public void handle(ActionEvent event) {
             
-            if(!keyComma.isActive()){
+            if(!buttonComma.isDisable()){
                 
                 if(display.isEmpty()){
                     display.setValue("0");
                     printDisplay();
                 }
-                
                 updateAndPrintDisplay(event);
             }
+            buttonComma.setDisable(true);
         }
     };
     
@@ -180,8 +150,9 @@ public class FXMLController implements Initializable, PrintDisplay {
             if(canBeUpdated()){    
                 updateAndPrintDisplay(event);
             }
-            keyAdd.setActive(true);
-            keyComma.setActive(false);
+            
+            buttonAdd.setDisable(true);
+            buttonComma.setDisable(false);
         }
     };
     
@@ -193,8 +164,8 @@ public class FXMLController implements Initializable, PrintDisplay {
             if(canBeUpdated()){
                 updateAndPrintDisplay(event);
             }
-            keySubstract.setActive(true);
-            keyComma.setActive(false);
+            buttonSubstract.setDisable(true);
+            buttonComma.setDisable(false);
         }
     };
     
@@ -206,8 +177,8 @@ public class FXMLController implements Initializable, PrintDisplay {
             if(canBeUpdated()){
                 updateAndPrintDisplay(event);
             }
-            keyMultiply.setActive(true);
-            keyComma.setActive(false);
+            buttonMultiply.setDisable(true);
+            buttonComma.setDisable(false);
         }
     };
     
@@ -219,8 +190,8 @@ public class FXMLController implements Initializable, PrintDisplay {
             if(canBeUpdated()){
                 updateAndPrintDisplay(event);
             }
-            keyDivide.setActive(true);
-            keyComma.setActive(false);
+            buttonDivide.setDisable(true);
+            buttonComma.setDisable(false);
         }
     };
     
@@ -243,10 +214,10 @@ public class FXMLController implements Initializable, PrintDisplay {
             
             updateAndPrintDisplay(event);
 
-            keyAdd.setActive(false);
-            keySubstract.setActive(false);
-            keyMultiply.setActive(false);
-            keyDivide.setActive(false);
+            buttonAdd.setDisable(false);
+            buttonSubstract.setDisable(false);
+            buttonMultiply.setDisable(false);
+            buttonDivide.setDisable(false);
         }
     };
     
@@ -254,6 +225,7 @@ public class FXMLController implements Initializable, PrintDisplay {
         display.updateDisplay(((Button)event.getSource()).getText());
         printDisplay();
     }
+    
     //Pata los botones AC(DELETE), =(ENTER)
     EventHandler<KeyEvent> eventHandlerReleased = new EventHandler<KeyEvent>() {
         
