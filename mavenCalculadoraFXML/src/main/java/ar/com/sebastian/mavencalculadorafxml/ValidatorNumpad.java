@@ -23,10 +23,10 @@ public class ValidatorNumpad {
         String numberRegex = "([0-9])";
         return number.matches(numberRegex);
     }
-    
-    public boolean isComma(String number) {
-        String numberRegex = "([,])";
-        return number.matches(numberRegex);
-    }
+//    
+//    public boolean isComma(String number) {
+//        String numberRegex = "([,])";
+//        return number.matches(numberRegex);
+//    }
     
 }

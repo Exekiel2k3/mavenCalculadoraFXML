@@ -1,16 +1,13 @@
 package ar.com.sebastian.mavencalculadorafxml;
 
-import ar.com.sebastian.mathgametdd.modelo.Calculator;
-import ar.com.sebastian.mathgametdd.modelo.CalculatorProxy;
-import ar.com.sebastian.mathgametdd.modelo.ExpressionFixer;
-import ar.com.sebastian.mathgametdd.modelo.MathLexer;
-import ar.com.sebastian.mathgametdd.modelo.MathParser;
-import ar.com.sebastian.mathgametdd.modelo.Precedence;
-import ar.com.sebastian.mathgametdd.modelo.Resolver;
+import ar.com.sebastian.mavencalculadorafxml.CalculateExpression.CalculateExpression;
 import ar.com.sebastian.mavencalculadorafxml.entidad.PrintDisplay;
 import ar.com.sebastian.mavencalculadorafxml.modelo.Display;
+import ar.com.sebastian.mavencalculadorafxml.entidad.CalculateExpressionAdapter;
 
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +20,7 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 
-public class FXMLController implements Initializable, PrintDisplay {
+public class FXMLController implements Initializable, PrintDisplay, CalculateExpressionAdapter {
     
     @FXML
     private Label displayCalc;
@@ -101,6 +98,7 @@ public class FXMLController implements Initializable, PrintDisplay {
         buttonSeven.setOnAction(eventHandleNumber);
         buttonEight.setOnAction(eventHandleNumber);
         buttonNine.setOnAction(eventHandleNumber);
+        
     }
     
     private final EventHandler<ActionEvent> eventHandleAC = new EventHandler<ActionEvent>() {
@@ -117,8 +115,8 @@ public class FXMLController implements Initializable, PrintDisplay {
      
         @Override
         public void handle(ActionEvent event) {
-            
-            if(!display.isEmpty() & display.getValue()!="0"){
+
+            if(!display.isEmpty() & !display.isZero()){
                 processExpression(display.getValue());
                 buttonComma.setDisable(true);
             }
@@ -133,7 +131,7 @@ public class FXMLController implements Initializable, PrintDisplay {
             if(!buttonComma.isDisable()){
                 
                 if(display.isEmpty()){
-                    display.setValue("0");
+                    display.setValue(ZERO);
                     printDisplay();
                 }
                 updateAndPrintDisplay(event);
@@ -200,7 +198,7 @@ public class FXMLController implements Initializable, PrintDisplay {
         @Override
         public void handle(ActionEvent event) {
             
-            if(!display.isEmpty() & display.getValue()!="0"){
+            if(!display.isEmpty() & !display.isZero()){
                 display.setValue(negate(display.getValue()));
                 printDisplay();
             }
@@ -220,11 +218,6 @@ public class FXMLController implements Initializable, PrintDisplay {
             buttonDivide.setDisable(false);
         }
     };
-    
-    private void updateAndPrintDisplay(ActionEvent event) {
-        display.updateDisplay(((Button)event.getSource()).getText());
-        printDisplay();
-    }
     
     //Pata los botones AC(DELETE), =(ENTER)
     EventHandler<KeyEvent> eventHandlerReleased = new EventHandler<KeyEvent>() {
@@ -249,87 +242,86 @@ public class FXMLController implements Initializable, PrintDisplay {
 
         @Override
         public void handle(KeyEvent event){
-           ValidatorNumpad validatorNumpad = new ValidatorNumpad();
            String value = event.getCharacter();
-            
-            switch(value){
-             case ",":
+           
+           switch(value){
+             case COMMA:
                  buttonComma.fire();
                  break;
-             case "+":
+             case PLUS:  
                  buttonAdd.fire();
                  break;
-             case "-":
+             case MINUS:
                  buttonSubstract.fire();
                  break;
-             case "*":
+             case MULTIPLY:
                  buttonMultiply.fire();
                  break;
-             case "/":
+             case DIVIDE:
                  buttonDivide.fire();
                  break;
-             case "+/-":
+             case NEGATE:
                  buttonNegate.fire();
                  break;
-             case "%":
+             case PERCENTAGE:
                  break;
-             case "0":
+             case ZERO:
                  buttonCero.fire();
                  break;    
-             case "1":
+             case ONE:
                  buttonOne.fire();
                  break;
-             case "2":
+             case TWO:
                  buttonTwo.fire();
                  break;
-             case "3":
+             case THREE:
                  buttonThree.fire();
                  break;
-             case "4":
+             case FOUR:
                  buttonFour.fire();
                  break;
-             case "5":
+             case FIVE:
                  buttonFive.fire();
                  break;
-             case "6":
+             case SIX:
                  buttonSix.fire();
                  break;
-             case "7":
+             case SEVEN:
                  buttonSeven.fire();
                  break;
-             case "8":
+             case EIGHT:
                  buttonEight.fire();
                  break;
-             case "9":
+             case NINE:
                  buttonNine.fire();
                  break;    
              default:
                  break;
-            }
+           }
         }
+        
     };
-
+    
+    private void updateAndPrintDisplay(ActionEvent event) {
+        
+        display.updateDisplay(((Button)event.getSource()).getText());
+        printDisplay();
+    }
+    
     private void processExpression(String expression) {
-        Precedence precedence = new Precedence();
-        Calculator calculator = new Calculator();
-        CalculatorProxy calculatorProxy = new CalculatorProxy(calculator);
-        ExpressionFixer fixer = new ExpressionFixer();
-        MathLexer lexer = new MathLexer(fixer);
-        Resolver resolver = new Resolver(lexer, calculatorProxy, precedence);
-        MathParser parser = new MathParser(lexer,resolver);
         
+        CalculateExpression calculateExpression = new CalculateExpression();
         double result = 0;
-        
-        adapter(expression);
-        
+
         try {
-            result = parser.processExpression(adapter(expression));
+            result = calculateExpression.calculate(expressionAdapter(expression));
             display.clearDisplay();
+            
             if(result == 0){
-                display.setValue("0");
+                display.setValue(ZERO);
                 printDisplay();
             }else{
-                display.updateDisplay(Double.toString(result).replace(".", ","));
+                display.updateDisplay(Double.toString(result).replace(DOT, COMMA));
                 printDisplay();
             }
         } catch (Exception ex) {
@@ -338,17 +330,24 @@ public class FXMLController implements Initializable, PrintDisplay {
             printDisplay();
         }
     }
-    
-    private String adapter(String expression){
+        
+    @Override
+    public String expressionAdapter(String expression) {
         
         String newExpression = "";
+        
         newExpression = expression;
-        newExpression = newExpression.replace("+", " + ");
-        newExpression = newExpression.replace("*", " * ");
-        newExpression = newExpression.replace("-", " - ");
-        newExpression = newExpression.replace("/", " / ");
-        newExpression = newExpression.replace(",", ".");
+        newExpression = newExpression.replace(PLUS, " " + PLUS + " ");
+        newExpression = newExpression.replace(MULTIPLY, " " + MULTIPLY + " ");
+        newExpression = newExpression.replace(MINUS, " " + MINUS + " ");
+        newExpression = newExpression.replace(DIVIDE, " " + DIVIDE + " ");
+        newExpression = newExpression.replace(COMMA, DOT);
         return newExpression;
+    }
+
+    @Override
+    public String resultAdapter(String result) {
+        return null;
     }
 
     @Override
@@ -364,21 +363,39 @@ public class FXMLController implements Initializable, PrintDisplay {
         }else{
             String operatorRegex = "([\\+|\\-|\\/|\\*])";
             
-            if(!value.contains("+") & !value.contains("-") & !value.contains("*") & !value.contains("/")){
-                valueNegate = "-" + value;
+            if(!value.contains(PLUS) & !value.contains(MINUS) & !value.contains(MULTIPLY) & !value.contains(DIVIDE)){
+                valueNegate = MINUS + value;
             }else{
                 int length = value.length();
                 for(int index = length; index>0 ;index--){
 
                     String aux = value.substring(index-1, index);
                     if(aux.matches(operatorRegex)){
-                        valueNegate = value.substring(0, index) + "-" + value.substring(index, length);
+                        valueNegate = value.substring(0, index) + MINUS + value.substring(index, length);
                         break;
                     }
-
                 }
             }
         }
         return valueNegate;
     }
+    
+    private static final String DOT = ".";
+    private static final String DIVIDE = "/";
+    private static final String MULTIPLY = "*";
+    private static final String MINUS = "-";
+    private static final String PLUS = "+";
+    private static final String COMMA = ",";
+    private static final String NINE = "9";
+    private static final String EIGHT = "8";
+    private static final String SEVEN = "7";
+    private static final String SIX = "6";
+    private static final String FIVE = "5";
+    private static final String FOUR = "4";
+    private static final String THREE = "3";
+    private static final String TWO = "2";
+    private static final String ONE = "1";
+    private static final String ZERO = "0";
+    private static final String PERCENTAGE = "%";
+    private static final String NEGATE = "+/-";
 }

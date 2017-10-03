@@ -9,6 +9,9 @@ package ar.com.sebastian.mavencalculadorafxml.entidad;
  *
  * @author sscardig
  */
-public interface PrintDisplay {
-    void printDisplay();
+public interface CalculateExpressionAdapter {
+    
+    String expressionAdapter(String expression);
+    String resultAdapter(String result);
+    
 }

@@ -37,4 +37,8 @@ public class Display {
     public boolean isEmpty(){
         return this.display.isEmpty();
     }
+    
+    public boolean isZero(){
+        return this.display.equals("0");
+    }
 }
