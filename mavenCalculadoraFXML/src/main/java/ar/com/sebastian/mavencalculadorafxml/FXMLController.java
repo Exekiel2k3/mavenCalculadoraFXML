@@ -6,7 +6,6 @@ import ar.com.sebastian.mavencalculadorafxml.modelo.Display;
 import ar.com.sebastian.mavencalculadorafxml.entidad.CalculateExpressionAdapter;
 
 import java.net.URL;
-import java.util.LinkedList;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,12 +65,12 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
     
     private Display display;
     
-    private LinkedList<String> queue = new LinkedList<>();
     private String number = "";
     
     private boolean canBeUpdated() {
         return !buttonAdd.isDisabled() && !buttonSubstract.isDisable() &&
                !buttonDivide.isDisable() && !buttonMultiply.isDisable() && !display.isEmpty();
+               
     }
     
     @Override
@@ -112,7 +111,6 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
             buttonComma.setDisable(false);
             
             number = "";
-            queue.clear();
         }
     };
 
@@ -126,7 +124,6 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
                 buttonComma.setDisable(true);
                 
                 number = "";
-                queue.clear();
             }
         }
     };
@@ -142,11 +139,10 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
                     display.setValue(ZERO);
                     printDisplay();
                 }
+                
+                number = display.removeLast() + ((Button)event.getSource()).getText();
+                display.add(number);
                 updateAndPrintDisplay(event);
-
-                number = queue.removeLast() + ((Button)event.getSource()).getText();
-                queue.add(number);
-
             }
             buttonComma.setDisable(true);
         }
@@ -156,10 +152,9 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
      
         @Override
         public void handle(ActionEvent event) {
-            
-            queue.add(((Button)event.getSource()).getText());
-            
+
             if(canBeUpdated()){    
+                display.add(((Button)event.getSource()).getText());
                 updateAndPrintDisplay(event);
             }
             
@@ -175,9 +170,8 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         @Override
         public void handle(ActionEvent event) {
             
-            queue.add(((Button)event.getSource()).getText());
-            
             if(canBeUpdated()){
+                display.add(((Button)event.getSource()).getText());
                 updateAndPrintDisplay(event);
             }
             buttonSubstract.setDisable(true);
@@ -192,9 +186,8 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         @Override
         public void handle(ActionEvent event) {
             
-            queue.add(((Button)event.getSource()).getText());
-            
             if(canBeUpdated()){
+                display.add(((Button)event.getSource()).getText());
                 updateAndPrintDisplay(event);
             }
             buttonMultiply.setDisable(true);
@@ -209,9 +202,8 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         @Override
         public void handle(ActionEvent event) {
             
-            queue.add(((Button)event.getSource()).getText());
-            
             if(canBeUpdated()){
+                display.add(((Button)event.getSource()).getText());
                 updateAndPrintDisplay(event);
             }
             buttonDivide.setDisable(true);
@@ -227,7 +219,22 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         public void handle(ActionEvent event) {
             
             if(!display.isEmpty() & !display.isZero()){
-                display.setValue(negate(display.getValue()));
+                
+                String auxNumber;
+                if(display.contains("(") | display.contains(")")){
+            
+                }else{
+
+                    if(display.getLast().matches("([\\+|\\-|\\/|\\*])")){
+                        auxNumber = display.get(display.size()-2);
+                        display.set(display.size()-2,"-" + auxNumber);
+                    }else{
+                        auxNumber = display.removeLast();
+                        display.addLast("-" + auxNumber);
+                    }
+                }
+                
+                
                 printDisplay();
             }
         }
@@ -238,22 +245,21 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         @Override
         public void handle(ActionEvent event) {
             
-            updateAndPrintDisplay(event);
-            
             if(buttonAdd.isDisable() | buttonSubstract.isDisable() | buttonDivide.isDisable() | buttonMultiply.isDisable()){
                 number = ((Button)event.getSource()).getText();
                 if(buttonComma.isDisable()){
-                    number = queue.removeLast() + ((Button)event.getSource()).getText();
+                    number = display.removeLast() + ((Button)event.getSource()).getText();
                 }
             }else{
-                if(queue.isEmpty()){
+                if(display.isEmpty()){
                     number = ((Button)event.getSource()).getText();
                 }else{
-                    number = queue.removeLast() + ((Button)event.getSource()).getText();
+                    number = display.removeLast() + ((Button)event.getSource()).getText();
                 }
             }
             
-            queue.add(number);
+            display.add(number);
+            updateAndPrintDisplay(event);
             
             buttonAdd.setDisable(false);
             buttonSubstract.setDisable(false);
@@ -346,31 +352,29 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
     };
     
     private void updateAndPrintDisplay(ActionEvent event) {
-        
-        display.updateDisplay(((Button)event.getSource()).getText());
         printDisplay();
     }
     
     private void processExpression(String expression) {
         
+        String newExpression = "";
         CalculateExpression calculateExpression = new CalculateExpression();
         double result = 0;
         
-        for (int i = 0; i < queue.size(); i++) {
-            String get = queue.get(i);
-            System.out.print(get + " ");
-            
-        }
         
+        newExpression = display.getValue(" ");
+        
+        System.out.println(newExpression);
+
         try {
-            result = calculateExpression.calculate(expressionAdapter(expression));
+            result = calculateExpression.calculate(expressionAdapter(newExpression));
             display.clearDisplay();
             
             if(result == 0){
                 display.setValue(ZERO);
                 printDisplay();
             }else{
-                display.updateDisplay(Double.toString(result).replace(DOT, COMMA));
+                display.setValue(Double.toString(result).replace(DOT, COMMA));
                 printDisplay();
             }
         } catch (Exception ex) {
@@ -386,10 +390,6 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         String newExpression = "";
         
         newExpression = expression;
-        newExpression = newExpression.replace(PLUS, " " + PLUS + " ");
-        newExpression = newExpression.replace(MULTIPLY, " " + MULTIPLY + " ");
-        newExpression = newExpression.replace(MINUS, " " + MINUS + " ");
-        newExpression = newExpression.replace(DIVIDE, " " + DIVIDE + " ");
         newExpression = newExpression.replace(COMMA, DOT);
         return newExpression;
     }
@@ -402,43 +402,6 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
     @Override
     public void printDisplay() {
         this.displayCalc.setText(display.getValue());
-    }
-
-    private String negate(String value) {
-        
-        
-//        queue.add(number);
-//        String auxNumber;
-//        if(queue.contains("(") | queue.contains(")")){
-//            
-//        }else{
-//            auxNumber = queue.removeLast();
-//            queue.addLast("-" + auxNumber);
-//            
-//            
-//        }
-
-        String valueNegate = value;
-        if(value.contains("(") | value.contains(")")){
-            
-        }else{
-            String operatorRegex = "([\\+|\\-|\\/|\\*])";
-            
-            if(!value.contains(PLUS) & !value.contains(MINUS) & !value.contains(MULTIPLY) & !value.contains(DIVIDE)){
-                valueNegate = MINUS + value;
-            }else{
-                int length = value.length();
-                for(int index = length; index>0 ;index--){
-
-                    String aux = value.substring(index-1, index);
-                    if(aux.matches(operatorRegex)){
-                        valueNegate = value.substring(0, index) + MINUS + value.substring(index, length);
-                        break;
-                    }
-                }
-            }
-        }
-        return valueNegate;
     }
     
     private static final String DOT = ".";
