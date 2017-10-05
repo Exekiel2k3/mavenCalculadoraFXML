@@ -64,14 +64,7 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
     private Button buttonNine;
     
     private Display display;
-    
     private String number = "";
-    
-    private boolean canBeUpdated() {
-        return !buttonAdd.isDisabled() && !buttonSubstract.isDisable() &&
-               !buttonDivide.isDisable() && !buttonMultiply.isDisable() && !display.isEmpty();
-               
-    }
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -84,10 +77,10 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         buttonAC.setOnAction(eventHandleAC);
         buttonEqual.setOnAction(eventHandleEqual);
         buttonComma.setOnAction(eventHandleComma);
-        buttonAdd.setOnAction(eventHandleAdd);
-        buttonSubstract.setOnAction(eventHandleSubstract);
-        buttonMultiply.setOnAction(eventHandleMultiply);
-        buttonDivide.setOnAction(eventHandleDivide);
+        buttonAdd.setOnAction(eventHandleOperator);
+        buttonSubstract.setOnAction(eventHandleOperator);
+        buttonMultiply.setOnAction(eventHandleOperator);
+        buttonDivide.setOnAction(eventHandleOperator);
         buttonNegate.setOnAction(eventHandleNegate);
         buttonCero.setOnAction(eventHandleNumber);
         buttonOne.setOnAction(eventHandleNumber);
@@ -109,7 +102,6 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
             display.clearDisplay();
             printDisplay();
             buttonComma.setDisable(false);
-            
             number = "";
         }
     };
@@ -122,7 +114,6 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
             if(!display.isEmpty() & !display.isZero()){
                 processExpression(display.getValue());
                 buttonComma.setDisable(true);
-                
                 number = "";
             }
         }
@@ -142,76 +133,33 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
                 
                 number = display.removeLast() + ((Button)event.getSource()).getText();
                 display.add(number);
-                updateAndPrintDisplay(event);
+                printDisplay();
             }
             buttonComma.setDisable(true);
         }
     };
     
-    private final EventHandler<ActionEvent> eventHandleAdd = new EventHandler<ActionEvent>() {
+    private final EventHandler<ActionEvent> eventHandleOperator = new EventHandler<ActionEvent>() {
      
         @Override
         public void handle(ActionEvent event) {
+            
+            if(canBeUpdated()){
+                display.add(((Button)event.getSource()).getText());
+                printDisplay();
+            }
+            ((Button)event.getSource()).setDisable(true);
+            buttonComma.setDisable(false);
 
-            if(canBeUpdated()){    
-                display.add(((Button)event.getSource()).getText());
-                updateAndPrintDisplay(event);
-            }
-            
-            buttonAdd.setDisable(true);
-            buttonComma.setDisable(false);
-            
             number = "";
         }
     };
     
-    private final EventHandler<ActionEvent> eventHandleSubstract = new EventHandler<ActionEvent>() {
-     
-        @Override
-        public void handle(ActionEvent event) {
-            
-            if(canBeUpdated()){
-                display.add(((Button)event.getSource()).getText());
-                updateAndPrintDisplay(event);
-            }
-            buttonSubstract.setDisable(true);
-            buttonComma.setDisable(false);
-            
-            number = "";
-        }
-    };
-    
-    private final EventHandler<ActionEvent> eventHandleMultiply = new EventHandler<ActionEvent>() {
-     
-        @Override
-        public void handle(ActionEvent event) {
-            
-            if(canBeUpdated()){
-                display.add(((Button)event.getSource()).getText());
-                updateAndPrintDisplay(event);
-            }
-            buttonMultiply.setDisable(true);
-            buttonComma.setDisable(false);
-            
-            number = "";
-        }
-    };
-    
-    private final EventHandler<ActionEvent> eventHandleDivide = new EventHandler<ActionEvent>() {
-     
-        @Override
-        public void handle(ActionEvent event) {
-            
-            if(canBeUpdated()){
-                display.add(((Button)event.getSource()).getText());
-                updateAndPrintDisplay(event);
-            }
-            buttonDivide.setDisable(true);
-            buttonComma.setDisable(false);
-            
-            number = "";
-        }
-    };
+    private boolean canBeUpdated() {
+        return !buttonAdd.isDisabled() && !buttonSubstract.isDisable() &&
+               !buttonDivide.isDisable() && !buttonMultiply.isDisable() && !display.isEmpty();
+               
+    }
     
     private final EventHandler<ActionEvent> eventHandleNegate = new EventHandler<ActionEvent>() {
      
@@ -233,8 +181,6 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
                         display.addLast("-" + auxNumber);
                     }
                 }
-                
-                
                 printDisplay();
             }
         }
@@ -259,7 +205,7 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
             }
             
             display.add(number);
-            updateAndPrintDisplay(event);
+            printDisplay();
             
             buttonAdd.setDisable(false);
             buttonSubstract.setDisable(false);
@@ -351,16 +297,11 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
         
     };
     
-    private void updateAndPrintDisplay(ActionEvent event) {
-        printDisplay();
-    }
-    
     private void processExpression(String expression) {
         
         String newExpression = "";
         CalculateExpression calculateExpression = new CalculateExpression();
         double result = 0;
-        
         
         newExpression = display.getValue(" ");
         
@@ -374,7 +315,7 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
                 display.setValue(ZERO);
                 printDisplay();
             }else{
-                display.setValue(Double.toString(result).replace(DOT, COMMA));
+                display.setValue(resultAdapter(Double.toString(result).replace(DOT, COMMA)));
                 printDisplay();
             }
         } catch (Exception ex) {
@@ -396,7 +337,25 @@ public class FXMLController implements Initializable, PrintDisplay, CalculateExp
 
     @Override
     public String resultAdapter(String result) {
-        return null;
+        
+        int initialIndex;
+        String resultAux;
+        
+        initialIndex = result.indexOf(COMMA);
+        
+        if(initialIndex != -1){
+            
+            resultAux = result.substring(initialIndex+1);
+            
+            if(Integer.parseInt(resultAux) != 0){
+                return result;
+           }else{
+                return result.substring(0, initialIndex);
+            }
+            
+        }else{
+            return result;
+        }
     }
 
     @Override
